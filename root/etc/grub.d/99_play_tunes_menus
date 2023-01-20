@@ -1,0 +1,6 @@
+#!/usr/bin/sh
+exec tail -n +3 $0
+
+menuentry 'Listen to Star Wars: Imperial March Tune' {
+	play 550 392 3 0 1 392 3 0 1 392 3 0 1 311 3 466 1 392 3 0 1 311 3 466 1 392 6 0 2 587 3 0 1 587 3 0 1 587 3 0 1 622 3 466 1 370 3 0 1 311 3 466 1 392 4
+}

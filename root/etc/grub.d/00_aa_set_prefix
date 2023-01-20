@@ -1,0 +1,3 @@
+#!/usr/bin/env bash
+
+echo "set prefix=($(grub2-probe --target=efi_hints /boot/efi/ | tr -d [:blank:] ))$(grub2-mkrelpath /boot/efi/EFI/fedora/)"
