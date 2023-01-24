@@ -3,3 +3,4 @@ GRUB_BACKGROUND=/usr/local/share/grub/background.png
 GRUB_FONT=/usr/share/grub/ter-u18b.pf2
 GRUB_TIMEOUT=-1
 GRUB_PRELOAD_MODULES="play"
+GRUB_DISABLE_OS_PROBER=true

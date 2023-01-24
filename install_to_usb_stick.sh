@@ -204,15 +204,8 @@ EOF
   # ln -s /boot/grub2 /boot/grub
 }
 
-add_target_files()
-{
-  local tarfilename="$(mktemp)"
-  fakeroot -- tar -czvf ${MOUNT_DIR}/root/${tarfilename} -C ${SOURCE_ROOT} .
-  in_target "tar xvf ${tarfilename} -C / && rm ${tarfilename}"
-}
-
 #TODO need to check for cx_freeze (also need in PATH)
-add_pyresume_platformer_to_raget_files()
+add_pyresume_platformer_to_target_files()
 {
   local tempdir=$(mktemp --directory)
   local dist_dir=${tempdir}/dist
@@ -224,15 +217,22 @@ add_pyresume_platformer_to_raget_files()
     python setup.py bdist --dist-dir ${dist_dir} --plat-name ${dist_platform}
   )
   
-  tar xvf \
-    `find ${dist_dir} -name "pyresume-platformer-*.${dist_platform}.tar.gz"` \
+  fakeroot -- \
+    tar xvf \
+    `find ${dist_dir} -name pyresume-platformer-*.${dist_platform}.tar.gz` \
     --directory ${MOUNT_DIR}/root/
   
   rm -rf ${tempdir}
 }
 
-add_pyresume_platformer_to_raget_files
-exit
+add_target_files()
+{
+  local tarfilename="$(mktemp)"
+  fakeroot -- tar -czvf ${MOUNT_DIR}/root/${tarfilename} -C ${SOURCE_ROOT} .
+  in_target "tar xvf ${tarfilename} -C / && rm ${tarfilename}"
+}
+
+
 
 options=$(getopt -l "help,mountdir:,device:,source-root:" -o "h,i,m:,d:" -a -- "$@")
 
@@ -268,71 +268,72 @@ shift
 done
 
 
+if [ "$UID" -ne 0 -o "$EUID" -ne 0 ]; then
+  echo "Error: It is necessary to be root for this"
+  exit 1
+fi
 
-#if [ "$UID" -ne 0 -o "$EUID" -ne 0 ]; then
-#  echo "Error: It is necessary to be root for this"
-#  exit 1
-#fi
-#
-#if [[ "$1" == "" ]]; then
-#  echo "Error: Missing command, see --help"
-#  exit 1
-#else
-#  case "$1" in
-#    install)
-#      umount_partitions
-#      create_partitions_and_file_systems
-#      mount_partitions
-#      after_mount_install_rootfs
-#      after_mount_prepare_fstab
-#      prepare_resolv_conf
-#      prepare_chroot_environment
-#      add_target_files
-#      setup_users_and_password
-#      setup_grub
-#      unprepare_resolv_conf
-#      unprepare_chroot_environment
-#      umount_partitions
-#      ;;
-#    installroot)
-#      umount_partitions
-#      # TODO check if possiblecreate_partitions_and_file_systems
-#      mount_partitions
-#      prepare_chroot_environment
-#      add_target_files
-#      unprepare_chroot_environment
-#      umount_partitions
-#      ;;
-#    mount)
-#      mount_partitions
-#      ;;
-#    umount)
-#      umount_partitions
-#      ;;
-#    chrootup)
-#      umount_partitions
-#      mount_partitions
-#      prepare_resolv_conf
-#      prepare_chroot_environment
-#      ;;
-#    chrootdown)
-#      unprepare_resolv_conf
-#      unprepare_chroot_environment
-#      umount_partitions
-#      ;;
-#    chroot)
-#      umount_partitions
-#      mount_partitions
-#      prepare_resolv_conf
-#      prepare_chroot_environment
-#      chroot ${MOUNT_DIR}/root /bin/bash
-#      unprepare_resolv_conf
-#      unprepare_chroot_environment
-#      umount_partitions
-#      ;;
-#    *)
-#      echo "Error: Unrecognized command, see --help"
-#      exit 1
-#  esac
-#fi
+if [[ "$1" == "" ]]; then
+  echo "Error: Missing command, see --help"
+  exit 1
+else
+  case "$1" in
+    install)
+      umount_partitions
+      create_partitions_and_file_systems
+      mount_partitions
+      after_mount_install_rootfs
+      after_mount_prepare_fstab
+      prepare_resolv_conf
+      prepare_chroot_environment
+      add_pyresume_platformer_to_target_files
+      add_target_files
+      setup_users_and_password
+      setup_grub
+      unprepare_resolv_conf
+      unprepare_chroot_environment
+      umount_partitions
+      ;;
+    installroot)
+      umount_partitions
+      # TODO check if possiblecreate_partitions_and_file_systems
+      mount_partitions
+      prepare_chroot_environment
+      add_pyresume_platformer_to_target_files
+      add_target_files
+      unprepare_chroot_environment
+      umount_partitions
+      ;;
+    mount)
+      mount_partitions
+      ;;
+    umount)
+      umount_partitions
+      ;;
+    chrootup)
+      umount_partitions
+      mount_partitions
+      prepare_resolv_conf
+      prepare_chroot_environment
+      ;;
+    chrootdown)
+      unprepare_resolv_conf
+      unprepare_chroot_environment
+      umount_partitions
+      ;;
+    chroot)
+      umount_partitions
+      mount_partitions
+      prepare_resolv_conf
+      prepare_chroot_environment
+      chroot ${MOUNT_DIR}/root /bin/bash
+      unprepare_resolv_conf
+      unprepare_chroot_environment
+      umount_partitions
+      ;;
+    *)
+      echo "Error: Unrecognized command, see --help"
+      exit 1
+  esac
+fi
 
